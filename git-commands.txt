@@ -1,3 +1,12 @@
 git add .
 git commit -m "messsage ...."
 git push 
+
+
+
+cloning --------------------
+0. Login to github https://github.com/lherrera0720/portfolio
+1. Download git
+2. Download VSCode
+3. Open GitBash Terminal
+4. Run -> git clone https://github.com/lherrera0720/portfolio.git .
