@@ -10,3 +10,163 @@ cloning --------------------
 2. Download VSCode
 3. Open GitBash Terminal
 4. Run -> git clone https://github.com/lherrera0720/portfolio.git .
+
+retail_eda
+
+-- ================================================
+-- Exploratory Data Analysis on Cleaned Retail Data
+-- Table: retail_sales_final
+-- Author: [Your Name]
+-- Date: [Date]
+-- ================================================
+
+-- =====================
+-- 1. Basic Summary Stats
+-- =====================
+
+-- Get the total number of transactions
+SELECT COUNT(*) AS total_transactions
+FROM retail_sales_final;
+
+-- Calculate the total revenue generated
+SELECT SUM(total_spent_cleaned) AS total_revenue
+FROM retail_sales_final;
+
+-- Compute the average basket size (average quantity per transaction)
+SELECT AVG(quantity_cleaned) AS avg_quantity_per_transaction
+FROM retail_sales_final;
+
+-- Calculate the average total amount spent per transaction
+SELECT AVG(total_spent_cleaned) AS avg_spent_per_transaction
+FROM retail_sales_final;
+
+-- ===========================
+-- 2. Customer Behavior Analysis
+-- ===========================
+
+-- Identify top 10 customers based on total spending
+SELECT customer_id, SUM(total_spent_cleaned) AS total_spent
+FROM retail_sales_final
+GROUP BY customer_id
+ORDER BY total_spent DESC
+LIMIT 10;
+
+-- Compute the average total spend per customer
+SELECT AVG(total_spent) AS avg_spent_per_customer
+FROM (
+  SELECT customer_id, SUM(total_spent_cleaned) AS total_spent
+  FROM retail_sales_final
+  GROUP BY customer_id
+) AS customer_summary;
+
+-- Compare number of one-time vs returning customers
+SELECT 
+  COUNT(*) FILTER (WHERE txn_count = 1) AS one_time_customers,
+  COUNT(*) FILTER (WHERE txn_count > 1) AS returning_customers
+FROM (
+  SELECT customer_id, COUNT(*) AS txn_count
+  FROM retail_sales_final
+  GROUP BY customer_id
+) AS customer_txn_counts;
+
+-- ===============================
+-- 3. Product & Category Performance
+-- ===============================
+
+-- Identify the top 10 most sold items based on quantity
+SELECT item, SUM(quantity_cleaned) AS total_quantity_sold
+FROM retail_sales_final
+GROUP BY item
+ORDER BY total_quantity_sold DESC
+LIMIT 10;
+
+-- Get total revenue per product category
+SELECT category, SUM(total_spent_cleaned) AS total_revenue
+FROM retail_sales_final
+GROUP BY category
+ORDER BY total_revenue DESC;
+
+-- Calculate the average price per unit by category
+SELECT category, AVG(price_per_unit_cleaned) AS avg_unit_price
+FROM retail_sales_final
+GROUP BY category;
+
+-- ============================
+-- 4. Time Series & Trend Analysis
+-- ============================
+
+-- Analyze daily revenue trends
+SELECT transaction_date_cleaned AS date, 
+       SUM(total_spent_cleaned) AS daily_revenue
+FROM retail_sales_final
+GROUP BY date
+ORDER BY date;
+
+-- Analyze monthly revenue trends
+SELECT DATE_TRUNC('month', transaction_date_cleaned) AS month, 
+       SUM(total_spent_cleaned) AS monthly_revenue
+FROM retail_sales_final
+GROUP BY month
+ORDER BY month;
+
+-- Identify top 10 days with highest sales
+SELECT transaction_date_cleaned AS date, 
+       SUM(total_spent_cleaned) AS daily_revenue
+FROM retail_sales_final
+GROUP BY date
+ORDER BY daily_revenue DESC
+LIMIT 10;
+
+-- ===================
+-- 5. Discounts Analysis
+-- ===================
+
+-- Compare revenue between discounted and non-discounted transactions
+SELECT discount_applied_cleaned AS discount_status,
+       COUNT(*) AS transaction_count,
+       SUM(total_spent_cleaned) AS total_revenue
+FROM retail_sales_final
+GROUP BY discount_applied_cleaned;
+
+-- Analyze average spend per transaction based on discount status
+SELECT discount_applied_cleaned AS discount_status,
+       AVG(total_spent_cleaned) AS avg_spent_per_transaction
+FROM retail_sales_final
+GROUP BY discount_applied_cleaned;
+
+-- ============================
+-- 6. Payment & Location Insights
+-- ============================
+
+-- Analyze revenue by payment method
+SELECT payment_method, 
+       SUM(total_spent_cleaned) AS total_revenue
+FROM retail_sales_final
+GROUP BY payment_method
+ORDER BY total_revenue DESC;
+
+-- Analyze revenue by store location
+SELECT location, 
+       SUM(total_spent_cleaned) AS total_revenue
+FROM retail_sales_final
+GROUP BY location
+ORDER BY total_revenue DESC;
+
+-- =======================
+-- 7. Outliers & Anomalies
+-- =======================
+
+-- Identify transactions with unusually high total spending (above 2 standard deviations)
+SELECT *
+FROM retail_sales_final
+WHERE total_spent_cleaned > (
+  SELECT AVG(total_spent_cleaned) + 2 * STDDEV(total_spent_cleaned)
+  FROM retail_sales_final
+)
+ORDER BY total_spent_cleaned DESC;
+
+-- Identify transactions where items were purchased in large quantities (above 50 units)
+SELECT *
+FROM retail_sales_final
+WHERE quantity_cleaned > 50
+ORDER BY quantity_cleaned DESC;
